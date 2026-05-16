@@ -1,0 +1,3 @@
+Major:
+
+Think about how the data will be structured for my algortyhm and scheduling. Maybe a linked list right?
