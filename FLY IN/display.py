@@ -2,8 +2,9 @@ import pygame
 import sys
 import pygame.locals as loc
 from typing import Any
-from parser import parser_file
-from baseclasses import Set_Up
+from fly_parser import parser_file
+from baseclasses import Set_Up, Camera
+from collections import Counter
 
 
 def replace_color_in_square(surface, old_color, new_color,
@@ -14,7 +15,8 @@ def replace_color_in_square(surface, old_color, new_color,
     # 1. Define o quadrado/área restrita dentro do sprite
     target_rect = pygame.Rect(x, y, width, height)
 
-    # 2. Cria uma subsuperfície que partilha os píxeis da cópia, mas isola a área
+    # 2. Cria uma subsuperfície que partilha os píxeis da cópia,
+    # mas isola a área
     sub_surface = img_copy.subsurface(target_rect)
 
     # 3. Aplica o PixelArray apenas nesta subsuperfície
@@ -29,6 +31,7 @@ def replace_color_in_square(surface, old_color, new_color,
 
 class Display:
 
+    drone_sprites = []
     hub_sprites = []
     white = (255, 255, 255)
     black = (0, 0, 0)
@@ -53,8 +56,11 @@ class Display:
 
     def start_display(self, setup: Set_Up) -> None:
 
+        camera = Camera()
         self.setup = setup
+        show_connections = False
         FPS = 60
+        pygame.font.init()
         FramePerSec = pygame.time.Clock()
         pygame.display.set_caption("Fly-in")
         width = 1920
@@ -66,15 +72,56 @@ class Display:
         fps.tick(60)
 
         for hub in setup.hubs.values():
-            hub.sprite.draw(disp_surface)
+            hub.sprite.draw(disp_surface, camera)
             self.hub_sprites.append(hub.sprite)
-            self.draw_connections(disp_surface)
+
+        for drone in setup.drones:
+            self.drone_sprites.append(drone.sprite)
+
         while (True):
 
             for event in pygame.event.get():
                 if event.type == loc.QUIT:
                     pygame.quit()
                     sys.exit()
+
+                if event.type == pygame.KEYDOWN:
+
+                    if event.key == pygame.K_p:
+
+                        show_connections = not show_connections
+
+                    if event.key == pygame.K_1:
+                        for sprite in self.hub_sprites:
+                            if sprite.size != 0.5:
+                                sprite.mini()
+
+                        for drone in self.drone_sprites:
+                            if drone.size != 0.5:
+                                drone.mini()
+                        camera.zoom = 0.5
+                    if event.key == pygame.K_2:
+                        for sprite in self.hub_sprites:
+                            if sprite.size != 1:
+                                sprite.medium()
+
+                        for drone in self.drone_sprites:
+                            if drone.size != 1:
+                                drone.medium()
+
+                        camera.zoom = 1
+
+                    if event.key == pygame.K_3:
+                        for sprite in self.hub_sprites:
+                            if sprite.size != 2:
+                                sprite.big()
+
+                        for drone in self.drone_sprites:
+                            if drone.size != 2:
+                                drone.big()
+
+                            camera.zoom = 2
+
             pressed_keys = pygame.key.get_pressed()
 
             if any([pressed_keys[loc.K_UP], pressed_keys[loc.K_DOWN],
@@ -82,7 +129,6 @@ class Display:
                    pressed_keys[loc.K_1], pressed_keys[loc.K_2],
                    pressed_keys[loc.K_3]]):
 
-                disp_surface.fill(self.oblue)
                 offset = [0, 0]
 
                 if pressed_keys[loc.K_UP]:
@@ -94,35 +140,47 @@ class Display:
                 if pressed_keys[loc.K_RIGHT]:
                     offset[0] += -16
 
-                if pressed_keys[loc.K_1]:
-                    for sprite in self.hub_sprites:
-                        if sprite.size != 0.5:
-                            sprite.mini()
+                camera.move(-offset[0], -offset[1])
 
-                if pressed_keys[loc.K_2]:
-                    for sprite in self.hub_sprites:
-                        if sprite.size != 1:
-                            sprite.medium()
+            disp_surface.fill(self.oblue)
 
-                if pressed_keys[loc.K_3]:
-                    for sprite in self.hub_sprites:
-                        if sprite.size != 2:
-                            sprite.big()
+            for sprite in self.hub_sprites:
+                sprite.draw(disp_surface, camera)
 
-                for sprite in self.hub_sprites:
-                    sprite.rect.move_ip(offset[0]*sprite.size,
-                                        offset[1]*sprite.size)
-                    sprite.draw(disp_surface)
+            for sprite in self.drone_sprites:
+                sprite.update(1/FPS)
 
-            self.draw_connections(disp_surface)
+            positions = Counter((drone.world_pos.x, drone.world_pos.y)
+                                for drone in self.drone_sprites)
+
+            for coords, count in positions.items():
+                drone = next(d for d in self.drone_sprites
+                             if d.world_pos.x == coords[0]
+                             and d.world_pos.y == coords[1])
+
+                drone.draw(disp_surface, camera)
+
+                font = pygame.font.Font(None, int(36 * camera.zoom))
+                text = font.render(str(count), True,
+                                   (255, 255, 255))
+                disp_surface.blit(text, drone.rect)
+
+            if show_connections:
+                self.draw_connections(disp_surface)
+
             pygame.display.update()
             FramePerSec.tick(FPS)
-
 
 
 if __name__ == "__main__":
 
     setup = parser_file("01_the_impossible_dream.txt")
+    # print(setup)
+    print(setup.hubs["gate_hell1"])
+    setup.drones[0].sprite.move(setup.hubs["gate_hell1"])
+    dsp = Display()
+    dsp.start_display(setup=setup)
+    setup = parser_file("03_basic_capacity.txt")
     # print(setup)
     dsp = Display()
     dsp.start_display(setup=setup)

@@ -1,3 +1,8 @@
 Major:
 
 Think about how the data will be structured for my algortyhm and scheduling. Maybe a linked list right?
+pathing algortyhm
+drawing drones
+yeah
+Add weight attribute to connections, that is usually 1 but is 2 for restricted tiles (or weight can be added during calc)
+makepriority tiles actually priorityzed
