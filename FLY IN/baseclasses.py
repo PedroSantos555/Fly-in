@@ -1,4 +1,4 @@
-from typing import List, Dict, Literal, Optional, Any
+from typing import List, Dict, Literal, Optional, Any, Tuple
 from pydantic import BaseModel, Field, model_validator
 from pydantic import ValidationError, ConfigDict
 import pygame
@@ -9,16 +9,16 @@ class Camera:
         self.offset = pygame.Vector2(0, 0)
         self.zoom = 1
 
-    def world_to_screen(self, world_pos):
+    def world_to_screen(self, world_pos) -> pygame.Vector2:
         return (world_pos - self.offset) * self.zoom
 
-    def move(self, x, y):
+    def move(self, x, y) -> None:
         self.offset.x += x
         self.offset.y += y
 
 
 class sprite_hub(pygame.sprite.Sprite):
-    def __init__(self, x: int, y: int):
+    def __init__(self, x: int, y: int) -> None:
         super().__init__()
         self.world_pos = pygame.Vector2(
             128*x + 64,
@@ -52,7 +52,7 @@ class sprite_hub(pygame.sprite.Sprite):
 
 
 class sprite_drone(pygame.sprite.Sprite):
-    def __init__(self, x: int, y: int):
+    def __init__(self, x: int, y: int) -> None:
         super().__init__()
         self.world_pos = pygame.Vector2(
             128*x + 64,
@@ -65,6 +65,7 @@ class sprite_drone(pygame.sprite.Sprite):
         self.target_pos = self.world_pos.copy()
         self.moving = False
         self.progress = 0.0
+        self.speed = 0.0
 
     def medium(self) -> None:
         self.image = pygame.image.load("./assets/Drone_Medium.png")
@@ -83,10 +84,16 @@ class sprite_drone(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.size = 0.5
 
-    def move(self, target_hub: Any):
+    def move(self, target_hub: Any) -> None:
+        # HAVE TO CHANGE TO ALLOW FOR 2 TURN MOVES INTO RESTRICTED HUBS
+
+        # WILL CHANGE TOWARDS A POSITION BASED SYSTEM
+        # DRONES WILL CALCULATE AND THEN STORE THEIR WORLD_POS EACH TURN ACORDING TO THE SCHEDULE
+        # AND THEN MOVE WILL WORK FROM THERE
         self.target_pos = pygame.Vector2(128*target_hub.x + 64,
                                          360 + 128*target_hub.y)
         self.progress = 0.0
+        self.speed = self.start_pos.distance_to(self.target_pos)
         self.moving = True
 
     def draw(self, surface: Any, camera: Camera) -> None:
@@ -94,14 +101,14 @@ class sprite_drone(pygame.sprite.Sprite):
         self.rect.center = screen_pos
         surface.blit(self.image, self.rect)
 
-    def update(self, dt):
+    def update(self, dt) -> None:
 
         if not self.moving:
             return
 
         distance = self.start_pos.distance_to(self.target_pos)
 
-        self.progress += 250 * self.size * dt / distance
+        self.progress += self.speed * self.size * dt / distance
 
         if self.progress >= 1:
             self.progress = 1
@@ -117,7 +124,7 @@ class Connection(BaseModel):
     max_links: Optional[int] = None
 
     @model_validator(mode="after")
-    def valid_chk(self):
+    def valid_chk(self) -> None:
         if self.max_links < 0:
             raise ValidationError("max_links must be a positive int")
 
@@ -137,6 +144,7 @@ class Hub(BaseModel):
     drones_landed: List[Any]
     status: Literal["normal", "restricted", "priority", "blocked"] = "normal"
     conects: List[Connection]
+    reserve_timetable: Dict[int, int]
     sprite: sprite_hub
 
 
@@ -148,7 +156,7 @@ class Drone(BaseModel):
     move_request: list = Field(default_factory=list)
 
     @classmethod
-    def from_hub(cls, hub: Hub):
+    def from_hub(cls, hub: Hub) -> Any:
         return cls(
             position=hub,
             sprite=sprite_drone(hub.x, hub.y),
@@ -156,6 +164,7 @@ class Drone(BaseModel):
 
 
 class Set_Up(BaseModel):
+
     drones: List[Drone]
     hubs: Dict[str, Hub]
     connections: List[Connection]
@@ -168,7 +177,7 @@ class Set_Up(BaseModel):
                     hub.conects.append(conetion)
 
     @model_validator(mode="after")
-    def valid_chk(self):
+    def valid_chk(self) -> None:
         starts = [h for h in self.hubs.values() if h.kind == "start_hub"]
 
         if len(starts) != 1:

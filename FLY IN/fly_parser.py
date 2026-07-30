@@ -60,7 +60,8 @@ def parser_file(file: str) -> Set_Up:
                              drones_landed=[],
                              status=att_dict.get("zone", "normal"),
                              conects=[],
-                             sprite=sprite_hub(int(x), int(y))
+                             sprite=sprite_hub(int(x), int(y)),
+                             reserve_timetable=dict()
                              )
 
         elif line.startswith("connection:"):

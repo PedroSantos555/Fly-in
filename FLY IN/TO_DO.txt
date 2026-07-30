@@ -6,3 +6,17 @@ drawing drones
 yeah
 Add weight attribute to connections, that is usually 1 but is 2 for restricted tiles (or weight can be added during calc)
 makepriority tiles actually priorityzed
+
+Display:
+All the different colors need to be added
+
+
+probably shjould also color code connections
+
+Restricted connection animation could be added, but can also probably just be done with the move function as is
+
+
+Scheduler:
+
+its a 3D problem when you include time.
+Drones are in practice reserving space in a hub in a specific time. Hubs might be busy now but free when the drone would-ve gotten there, and vice versa
