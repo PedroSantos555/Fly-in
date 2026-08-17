@@ -122,6 +122,7 @@ class Connection(BaseModel):
     start: str
     end: str
     max_links: Optional[int] = None
+    reserve_timetable: Dict[int, int]
 
     @model_validator(mode="after")
     def valid_chk(self) -> None:
@@ -174,6 +175,8 @@ class Set_Up(BaseModel):
         for hub in self.hubs.values():
             for conetion in self.connections:
                 if conetion.start == hub.name:
+                    hub.conects.append(conetion)
+                if conetion.end == hub.name:
                     hub.conects.append(conetion)
 
     @model_validator(mode="after")

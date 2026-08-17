@@ -75,7 +75,8 @@ def parser_file(file: str) -> Set_Up:
             start, end = paths.strip().split("-")
             new_cnct = Connection(start=start, end=end,
                                   max_links=att_dict.get("max_link_capacity",
-                                                         1))
+                                                         1),
+                                  reserve_timetable=dict())
             connections.append(new_cnct)
 
     while nb_drones > 0:
