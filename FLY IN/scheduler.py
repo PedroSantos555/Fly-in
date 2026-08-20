@@ -33,6 +33,14 @@ def weight(start_hub: Hub, end_hub: Hub, time: int) -> float:
     # (have to look up the next time there's a free spot, and use that)!
 
     weight = 0
+    wait_time = 0
+    connection = find_connection(start_hub, end_hub)
+
+    if connection.max_links <= connection.reserve_timetable.get(time, 0):
+
+        wait_time += waiting_time(connection.reserve_timetable,
+                                  connection.max_links, time)
+        time += wait_time
 
     if end_hub.status == "blocked":
         return float('inf')
@@ -42,9 +50,8 @@ def weight(start_hub: Hub, end_hub: Hub, time: int) -> float:
         print("TIME CHECKED: ", time)
     if end_hub.max_drones <= end_hub.reserve_timetable.get(time, 0):
 
-        wait_time = waiting_time(end_hub.reserve_timetable,
+        wait_time += waiting_time(end_hub.reserve_timetable,
                                  end_hub.max_drones, time)
-        weight += wait_time
 
     if end_hub.status == "priority":
         weight += 0.99
@@ -57,7 +64,7 @@ def weight(start_hub: Hub, end_hub: Hub, time: int) -> float:
 
     connect = find_connection(start_hub, end_hub)
 
-    return weight
+    return weight + wait_time
 
 
 def get_start_end(hubs: Dict[str, Hub]) -> Tuple[Hub, Hub]:
@@ -123,7 +130,6 @@ def shortest_path_calc(hubs: Dict[str, Hub],
 def reconstruct_path(previous: Dict[str, Optional[str]],
                      start: str, end: str) -> List[str]:
     path = []
-
     current = end
 
     while current is not None:
@@ -157,10 +163,17 @@ class Schedule():
             for number, hub in enumerate(path):
                 next_hub = self.hubs[hub]
 
- #               if number > 0:
- #                   for conect in next_hub.conects:
- #                       if path[number - 1] == conect.start or path[number - 1] == conect.end:
- #                           if conect.type
+                if number > 0:
+
+                    conection = find_connection(path[number - 1], next_hub)
+
+                    while conection.max_links <= Connection.reserve_timetable.get(number + turns_wait, 0):
+                        turns_wait += 1
+
+                    if not conection.reserve_timetable.get(number + turns_wait):
+                        conection.reserve_timetable[number + turns_wait] = 1
+                    else:
+                        conection.reserve_timetable[number + turns_wait] += 1
 
                 if next_hub.status == "restricted":
                     turns_wait += 1

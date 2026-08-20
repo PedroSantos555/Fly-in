@@ -76,7 +76,6 @@ class Display:
             self.hub_sprites.append(hub.sprite)
 
         for drone in setup.drones:
-            drone.sprite.draw(disp_surface, camera)
             self.drone_sprites.append(drone.sprite)
 
         while (True):
@@ -130,7 +129,6 @@ class Display:
                    pressed_keys[loc.K_1], pressed_keys[loc.K_2],
                    pressed_keys[loc.K_3]]):
 
-                disp_surface.fill(self.oblue)
                 offset = [0, 0]
 
                 if pressed_keys[loc.K_UP]:
@@ -144,29 +142,31 @@ class Display:
 
                 camera.move(-offset[0], -offset[1])
 
-                for sprite in self.hub_sprites:
-                    sprite.draw(disp_surface, camera)
+            disp_surface.fill(self.oblue)
 
-                positions = Counter((drone.world_pos.x, drone.world_pos.y)
-                                    for drone in self.drone_sprites)
+            for sprite in self.hub_sprites:
+                sprite.draw(disp_surface, camera)
 
-                for coords, count in positions.items():
-                    drone = next(d for d in self.drone_sprites
-                                 if d.world_pos.x == coords[0]
-                                 and d.world_pos.y == coords[1])
+            for sprite in self.drone_sprites:
+                sprite.update(1/FPS)
 
-                    drone.draw(disp_surface, camera)
+            positions = Counter((drone.world_pos.x, drone.world_pos.y)
+                                for drone in self.drone_sprites)
 
-                    font = pygame.font.Font(None, int(36 * camera.zoom))
-                    text = font.render(str(count), True,
-                                       (255, 255, 255))
-                    disp_surface.blit(text, drone.rect)
+            for coords, count in positions.items():
+                drone = next(d for d in self.drone_sprites
+                             if d.world_pos.x == coords[0]
+                             and d.world_pos.y == coords[1])
+
+                drone.draw(disp_surface, camera)
+
+                font = pygame.font.Font(None, int(36 * camera.zoom))
+                text = font.render(str(count), True,
+                                   (255, 255, 255))
+                disp_surface.blit(text, drone.rect)
 
             if show_connections:
                 self.draw_connections(disp_surface)
-
-            for sprite in self.drone_sprites:
-                sprite.update()
 
             pygame.display.update()
             FramePerSec.tick(FPS)
@@ -175,6 +175,13 @@ class Display:
 if __name__ == "__main__":
 
     setup = parser_file("01_the_impossible_dream.txt")
+    # print(setup)
+    print(setup.hubs["gate_hell1"])
+    setup.drones[0].sprite.move(setup.hubs["gate_hell1"])
+    # setup.drones[1].sprite.move(setup.hubs["final_torture5"])
+    dsp = Display()
+    dsp.start_display(setup=setup)
+    setup = parser_file("01_basic_capacity.txt")
     # print(setup)
     dsp = Display()
     dsp.start_display(setup=setup)
