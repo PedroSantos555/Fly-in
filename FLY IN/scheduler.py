@@ -36,7 +36,7 @@ def weight(start_hub: Hub, end_hub: Hub, time: int) -> float:
     wait_time = 0
     connection = find_connection(start_hub, end_hub)
 
-    if connection.max_links <= connection.reserve_timetable.get(time, 0):
+    if connection is not None and connection.max_links <= connection.reserve_timetable.get(time, 0):
 
         wait_time += waiting_time(connection.reserve_timetable,
                                   connection.max_links, time)
@@ -165,9 +165,9 @@ class Schedule():
 
                 if number > 0:
 
-                    conection = find_connection(path[number - 1], next_hub)
+                    conection = find_connection(self.hubs[path[number - 1]], next_hub)
 
-                    while conection.max_links <= Connection.reserve_timetable.get(number + turns_wait, 0):
+                    while conection.max_links <= conection.reserve_timetable.get(number + turns_wait, 0):
                         turns_wait += 1
 
                     if not conection.reserve_timetable.get(number + turns_wait):

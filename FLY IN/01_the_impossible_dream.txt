@@ -152,7 +152,7 @@ connection: false_hope1-priority_trap1
 connection: false_hope2-priority_trap2
 connection: false_hope3-priority_dead
 
-connection: false_hope1-priority_trap3
+connection: false_hope1-priority_trap37
 connection: false_hope2-priority_trap4
 connection: false_hope3-priority_dead2
 
