@@ -1,0 +1,56 @@
+Major:
+
+Think about how the data will be structured for my algortyhm and scheduling. Maybe a linked list right?
+pathing algortyhm
+drawing drones
+yeah
+Add weight attribute to connections, that is usually 1 but is 2 for restricted tiles (or weight can be added during calc)
+makepriority tiles actually priorityzed
+
+Display:
+All the different colors need to be added
+
+
+probably shjould also color code connections
+
+Restricted connection animation could be added, but can also probably just be done with the move function as is
+
+
+Scheduler:
+
+its a 3D problem when you include time.
+Drones are in practice reserving space in a hub in a specific time. Hubs might be busy now but free when the drone would-ve gotten there, and vice versa
+
+
+
+
+Update: 
+
+Connections still missing from consideration, otherwise scheduler seems OK.. I think.
+Once connections are implemented, translate everything into a script the display drones can follow
+
+
+
+WATCH OUT FOR THIS:
+
+VII.5 Simulation Output Format
+• The simulation must output the step-by-step movement of drones from the start to
+the end zone.
+• Each simulation turn is represented by a line.
+• A line must list all the drone movements that occur during that turn, space-
+separated. Each movement must follow the format: D<ID>-<zone>, or D<ID>-<connection>
+in case of drones still in flight toward restricted zones.
+◦ D<ID> refers to the unique drone identifier (e.g., D1, D2).
+◦ <zone> is the name of the destination zone.
+◦ <connection> is the name of the connection toward a restricted zone.
+• Drones that do not move in a given turn are omitted from that line.
+• Drones that reach the end zone are considered delivered and are no longer tracked.
+• The simulation ends when all drones have reached the end zone.
+• Example:
+D1-roof1 D2-corridorA
+D1-roof2 D2-tunnelB
+D1-goal D2-goal
+
+Problems:
+As it stands, reserve timetables only count the first turn drones spend in a hub/ connection. If a drone has to wait multiple turns it can lead to serious issues
+The end hub reserve table also seems wrong as a result, since drone count oesnt accumulate
