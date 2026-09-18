@@ -29,6 +29,9 @@ def parser_file(file: str) -> Set_Up:
     drones = []
     hubs = {}
     connections = []
+    coords = set()
+    endhb = 0
+    starthb = 0
     with open(file) as f:
         text = f.read()
 
@@ -45,28 +48,54 @@ def parser_file(file: str) -> Set_Up:
             rest, attributes = line.split('[', 1)
             kind, info = rest.split(':', 1)
             name, x, y = info.split()
-            if name in hubs:
+
+            if kind == "end_hub":
+                if endhb == 1:
+                    raise ParseError(
+                        f"Line {nline}: duplicate end_hub '{name}'")
+                end = 1
+
+            if kind == "start_hub":
+                if starthb == 1:
+                    raise ParseError(
+                        f"Line {nline}: duplicate start_hub '{name}'")
+                start = 1
+
+            pos = (x, y)
+            if pos in coords:
                 raise ParseError(
-                    f"Line {nline}: duplicate hub '{name}'")
+                    f"Line {nline}: duplicate hub coordinates '{name}'")
+            coords.add(pos)
+
+            if name in hubs:
+                raise ParseError(f"Line {nline}: duplicate hub name'{name}'")
+
             att_dict = parse_attributes(attributes.rstrip("]").strip())
 
-            hubs[name] = Hub(kind=kind,
-                             name=name,
-                             x=int(x),
-                             y=int(y),
-                             color=att_dict.get("color", "none"),
-                             max_drones=att_dict.get("max_drones", 1),
-                             drones_landed=[],
-                             status=att_dict.get("zone", "normal"),
-                             conects=[],
-                             sprite=sprite_hub(int(x), int(y),
-                                               att_dict.get("color", "none"),
-                                               att_dict.get("zone", "normal")),
-                             reserve_timetable=dict()
-                             )
+            try:
+                hubs[name] = Hub(kind=kind,
+                                 name=name,
+                                 x=int(x),
+                                 y=int(y),
+                                 color=att_dict.get("color", "none"),
+                                 max_drones=att_dict.get("max_drones", 1),
+                                 drones_landed=[],
+                                 status=att_dict.get("zone", "normal"),
+                                 conects=[],
+                                 sprite=sprite_hub(int(x), int(y),
+                                                   att_dict.get("color",
+                                                                "none"),
+                                                   att_dict.get("zone",
+                                                                "normal")),
+                                 reserve_timetable=dict()
+                                 )
+            except Exception as error:
+                raise ParseError(
+                    f"Line {nline}: invalid hub '{name}' - {error}")
 
         elif line.startswith("connection:"):
             _, data = line.split(":", 1)
+
             if "[" in line:
                 paths, attributes = data.split("[")
                 att_dict = parse_attributes(attributes.rstrip("]").strip())
@@ -74,10 +103,22 @@ def parser_file(file: str) -> Set_Up:
                 paths = data
                 att_dict = {}
             start, end = paths.strip().split("-")
+
+            for cnctn in connections:
+                if start == cnctn.start and end == cnctn.end:
+                    raise ParseError(
+                        f"Line {nline}:"
+                        f"Duplicate connection '{start} - {end}'")
+
+                if start == cnctn.end and end == cnctn.start:
+                    raise ParseError(
+                        f"Line {nline}:"
+                        f"Duplicate connection '{start} - {end}'")
+
             if start not in hubs or end not in hubs:
                 raise ParseError(
                     f"Line {nline}:"
-                    "Connection between invalid hubs '{start} - {end}'")
+                    f"Connection between invalid hubs '{start} - {end}'")
 
             new_cnct = Connection(start=start, end=end,
                                   max_links=att_dict.get("max_link_capacity",
@@ -90,7 +131,8 @@ def parser_file(file: str) -> Set_Up:
     while nb_drones > 0:
         new_drone = Drone(id=nid,
                           position=hubs["start"],
-                          sprite=sprite_drone(hubs["start"].x, hubs["start"].y),
+                          sprite=sprite_drone(hubs["start"].x,
+                                              hubs["start"].y),
                           script=dict())
         nid += 1
         drones.append(new_drone)

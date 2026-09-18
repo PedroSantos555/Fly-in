@@ -186,7 +186,10 @@ class Schedule():
                     turns_wait += 1
 
                 while next_hub.max_drones <= next_hub.reserve_timetable.get(number + turns_wait, 0):
-                    current_hub.reserve_timetable[number + turns_wait] += 1
+                    if not current_hub.reserve_timetable.get(number + turns_wait):
+                        current_hub.reserve_timetable[number + turns_wait] = 1
+                    else:
+                        current_hub.reserve_timetable[number + turns_wait] += 1
                     turns_wait += 1
 
                 drone.script[number + turns_wait] = (next_hub.x, next_hub.y, next_hub.name)
@@ -209,8 +212,6 @@ class Schedule():
 def end_turn(setup: Set_Up) -> int:
     start, end = get_start_end(setup.hubs)
     endturn = 0
-    print("start", start.reserve_timetable)
-    print("end", end.reserve_timetable)
     for nturn, ndrones in end.reserve_timetable.items():
         if ndrones == len(setup.drones):
             endturn = nturn

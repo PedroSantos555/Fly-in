@@ -328,12 +328,12 @@ class Set_Up(BaseModel):
         starts = [h for h in self.hubs.values() if h.kind == "start_hub"]
 
         if len(starts) != 1:
-            raise ValidationError("Expected exactly one start_hub")
+            raise ValueError("Expected exactly one start_hub")
 
         ends = [h for h in self.hubs.values() if h.kind == "end_hub"]
 
         if len(ends) != 1:
-            raise ValidationError("Expected exactly one end_hub")
+            raise ValueError("Expected exactly one end_hub")
 
         coords = set()
 
@@ -342,7 +342,7 @@ class Set_Up(BaseModel):
             pos = (hub.x, hub.y)
 
             if pos in coords:
-                raise ValidationError(
+                raise ValueError(
                     f"Duplicate coordinates {pos}"
                 )
 

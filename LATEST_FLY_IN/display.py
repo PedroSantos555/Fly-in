@@ -2,7 +2,7 @@ import pygame
 import sys
 import pygame.locals as loc
 from typing import Any, List
-from fly_parser import parser_file
+from fly_parser import parser_file, ParseError
 from baseclasses import Set_Up, Camera, Drone
 from collections import Counter
 from scheduler import Schedule, shortest_path_calc, end_turn
@@ -10,6 +10,7 @@ from scheduler import Schedule, shortest_path_calc, end_turn
 
 def execute_turn(drones: List[Drone], n_turn: int, instant: bool) -> None:
 
+    print("TURN", n_turn)
     for drone in drones:
         if drone.script.get(n_turn) is not None:
             x, y, name = drone.script.get(n_turn)
@@ -83,7 +84,6 @@ class Display:
                 timer += dt
                 if timer >= 1.5 and turn <= end_turn(self.setup):
                     execute_turn(self.setup.drones, turn, False)
-                    print("TURN", turn)
                     timer -= 1.5
                     turn += 1
 
@@ -191,12 +191,16 @@ if __name__ == "__main__":
 
     pygame.init()
     pygame.display.set_mode((1920, 1080))
+    setup = None
     setup = parser_file("01_the_impossible_dream.txt")
+    #setup = parser_file("03_basic_capacity.txt")
+
     print(setup.hubs)
     for key, hub in setup.hubs.items():
         print(hub.name)
         print("key = ", hub.name)
     dist, prev = shortest_path_calc(setup.hubs, setup.hubs["start"])
+
 
     schedule = Schedule(setup)
     schedule.schedule_drones()
