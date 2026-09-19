@@ -7,15 +7,25 @@ class ParseError(Exception):
     pass
 
 
-def parse_attributes(raw_attributes: str) -> Dict:
+def parse_attributes(raw_attributes: str, nline: int) -> Dict:
 
     att_dict = {}
     for group in raw_attributes.split():
         if "=" not in group:
             raise ParseError(
-                f"Invalid attribute '{group}'"
+                f"Line {nline}: Invalid attribute '{group}'"
             )
-        name, value = group.split("=", 1)
+        total = group.split("=", 1)
+
+        if len(total) != 2:
+            raise ParseError(
+                f"Line {nline}: Invalid attribute '{group}'"
+            )
+        name, value = total
+        if value == "":
+            raise ParseError(
+                f"Line {nline}: Invalid attribute '{group}'"
+            )
         if name in {"max_drones", "max_link_capacity"}:
             value = int(value)
         att_dict[name] = value
@@ -45,9 +55,19 @@ def parser_file(file: str) -> Set_Up:
             nb_drones = int(rest.strip())
 
         elif line.startswith(("hub:", "end_hub:", "start_hub:")):
-            rest, attributes = line.split('[', 1)
-            kind, info = rest.split(':', 1)
-            name, x, y = info.split()
+            try:
+                rest, attributes = line.split('[', 1)
+                kind, info = rest.split(':', 1)
+                name, x, y = info.split()
+            except ValueError:
+                raise ParseError(
+                        f"Line {nline}: Hub data '{line}' badly formated"
+                        "\n Hub name cant have spaces and must "
+                        "have the format 'name: x y [metadata]'")
+
+            if '-' in name:
+                raise ParseError(
+                        f"Line {nline}: Hub name '{name}' cant have dashes")
 
             if kind == "end_hub":
                 if endhb == 1:
@@ -70,7 +90,7 @@ def parser_file(file: str) -> Set_Up:
             if name in hubs:
                 raise ParseError(f"Line {nline}: duplicate hub name'{name}'")
 
-            att_dict = parse_attributes(attributes.rstrip("]").strip())
+            att_dict = parse_attributes(attributes.rstrip("]").strip(), nline)
 
             try:
                 hubs[name] = Hub(kind=kind,
@@ -98,7 +118,8 @@ def parser_file(file: str) -> Set_Up:
 
             if "[" in line:
                 paths, attributes = data.split("[")
-                att_dict = parse_attributes(attributes.rstrip("]").strip())
+                att_dict = parse_attributes(attributes.rstrip("]").strip(),
+                                            nline)
             else:
                 paths = data
                 att_dict = {}

@@ -102,17 +102,22 @@ def shortest_path_calc(hubs: Dict[str, Hub],
         for connection in hubs[current].conects:
             if connection.start == current:
                 neighbors.append(connection.end)
-            else:
+            elif connection.end == current:
                 neighbors.append(connection.start)
+
+        #print(f"neighboorhood of {current}: {neighbors}")
+
+        # INSANE BUGG HOLY SHIT
 
         for close_hub in neighbors:
 
             new_distance = distance[current] + weight(hubs[current],
                                                       hubs[close_hub],
-                                                      round(distance[current] + 1))
+                                                      round(distance[current]
+                                                            + 1))
             # print("time used", distance[current] + 1)
 
-            if new_distance < distance[close_hub]:
+            if new_distance <= distance[close_hub]:
                 distance[close_hub] = new_distance
                 previous[close_hub] = current
                 heapq.heappush(prio_q, (distance[close_hub], close_hub))
@@ -150,6 +155,7 @@ class Schedule():
 
         for drone in self.drones:
             distance, prev = shortest_path_calc(self.hubs, drone.position)
+            print(distance)
             path = reconstruct_path(prev, drone.position.name, end.name)
 
             turns_wait = 0
@@ -161,6 +167,9 @@ class Schedule():
                 if number > 0:
                     current_hub = self.hubs[path[number - 1]]
                     conection = find_connection(current_hub, next_hub)
+
+                    if conection is None:
+                        raise ValueError(f"Connection between {current_hub.name} and {next_hub.name} doesnt exist")
 
                     while conection.max_links <= conection.reserve_timetable.get(number + turns_wait, 0):
 

@@ -192,8 +192,17 @@ if __name__ == "__main__":
     pygame.init()
     pygame.display.set_mode((1920, 1080))
     setup = None
-    setup = parser_file("01_the_impossible_dream.txt")
-    #setup = parser_file("03_basic_capacity.txt")
+    #setup = parser_file("01_the_impossible_dream.txt")
+    
+    #setup = parser_file("FLYIN.maps/maps/easy/01_linear_path.txt")
+    #setup = parser_file("FLYIN.maps/maps/easy/02_simple_fork.txt")
+    #setup = parser_file("FLYIN.maps/maps/easy/03_basic_capacity.txt")
+    #setup = parser_file("FLYIN.maps/maps/medium/01_dead_end_trap.txt")
+    #setup = parser_file("FLYIN.maps/maps/medium/02_circular_loop.txt")
+    setup = parser_file("FLYIN.maps/maps/hard/01_maze_nightmare.txt")
+    #setup = parser_file("FLYIN.maps/maps/hard/02_capacity_hell.txt")
+    #setup = parser_file("FLYIN.maps/maps/medium/03_priority_puzzle.txt")
+
 
     print(setup.hubs)
     for key, hub in setup.hubs.items():
