@@ -1,0 +1,3 @@
+Parser errors - hubabeabes going through, max capacity accepting negative int, connections without - syntax going through, nb drones accepted without being first line
+
+for live coding, make a function that handles flags and changing maps on the console
